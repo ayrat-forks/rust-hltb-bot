@@ -1,0 +1,24 @@
+[package]
+name = "hltb_bot"
+version = "0.1.0"
+edition = "2018"
+autobins = false
+
+[dependencies]
+reqwest = { version = "0.11.10", features = ["json" ] }
+tokio = { version = "1.*", features = ["macros"] }
+futures = "0.3.21"
+scraper = '0.13.0'
+lambda_runtime = "0.5.1"
+log = "0.4.17"
+serde = "1"
+serde_json = "^1"
+simple_logger = "2.1.0"
+frankenstein = { version = "0.15.1" }
+
+[target.x86_64-unknown-linux-musl.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
+
+[[bin]]
+name = "bootstrap"
+path = "src/main.rs"

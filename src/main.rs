@@ -18,7 +18,7 @@ async fn main() {
     let run_mode = std::env::var("RUN_MODE")
         .map_or_else(|_| {
             log::warn!("RUN_MODE missing or invalid");
-            RunMode::WebHook
+            RunMode::Polling
         }, |run_mode| RunMode::from_str(&run_mode).unwrap());
 
     log::info!("Running in {:?} mode", run_mode);

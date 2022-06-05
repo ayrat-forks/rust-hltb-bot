@@ -51,7 +51,7 @@ async fn poll(api: &Api) {
     log::info!("Running polling");
     let mut update_id: u32 = 0;
     loop {
-        log::info!("update_id: {}", update_id);
+        log::debug!("update_id: {}", update_id);
         let update_params = GetUpdatesParams::builder()
             .allowed_updates(vec![AllowedUpdate::Message, AllowedUpdate::EditedMessage])
             .offset(u32::clone(&update_id))
@@ -66,7 +66,7 @@ async fn poll(api: &Api) {
                 }
             }
             Err(err) => {
-                log::info!("{:?}", err)
+                log::error!("{:?}", err)
             }
         }
     }
@@ -101,14 +101,14 @@ async fn respond(api: &Api, msg: Message) -> Result<Option<Message>, Box<dyn Err
         .text(&initial_msg_text)
         .parse_mode(ParseMode::Markdown)
         .build();
-    log::info!("-- sending initial message\n{}\n--", initial_msg_text);
+    log::debug!("-- sending initial message\n{}\n--", initial_msg_text);
     let initial_msg_rsp = api.send_message(&initial_msg)?;
 
     let full_entries = full_entries_future.await;
     let updated_text = populate_page_data(&initial_msg_text, &full_entries);
 
     if updated_text == initial_msg_text {
-        log::info!("not updated: {}", updated_text);
+        log::debug!("not updated: {}", updated_text);
         return Ok(Some(initial_msg_rsp.result));
     }
 
@@ -118,7 +118,7 @@ async fn respond(api: &Api, msg: Message) -> Result<Option<Message>, Box<dyn Err
         .text(&updated_text)
         .parse_mode(ParseMode::Markdown)
         .build();
-    log::info!("-- sending edited message\n{}\n--", updated_text);
+    log::debug!("-- sending edited message\n{}\n--", updated_text);
     let msg = api.edit_message_text(&updated_msg)?;
 
     match msg {

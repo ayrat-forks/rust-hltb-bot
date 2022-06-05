@@ -2,6 +2,8 @@
 use crate::model::*;
 
 use std::error::Error;
+use std::str::FromStr;
+use std::usize;
 use reqwest::{ Client, header };
 use scraper::{ ElementRef, Html, Selector };
 use futures::future::*;
@@ -39,11 +41,15 @@ pub async fn fetch_search_page(query: &str) -> Result<String, Box<dyn Error>> {
 
 /// parse slim entries from search page HTML
 pub fn parse_entries_from_page(page: &str) -> Vec<Entry> {
+    let entries_limit = usize::from_str(&std::env::var("ENTRIES_LIMIT")
+        .unwrap_or("5".to_string())
+    ).unwrap();
+
     Html::parse_document(page)
         .select(&Selector::parse("li.back_darkish").unwrap())
         .into_iter()
         .filter_map(parse_element)
-        .take(5)
+        .take(entries_limit)
         .collect()
 }
 
@@ -152,11 +158,11 @@ async fn map_full_entry(entry: Entry) -> Option<FullEntry> {
     let result = fetch_game_data(&entry.link).await;
     match result {
         Ok(data) => {
-            log::info!("{}: {:?}", entry.name, data);
+            log::debug!("{}: {:?}", entry.name, data);
             Some(FullEntry::new(entry, data))
         }
         Err(e) => {
-            log::info!("{}: {:?}", entry.name, e);
+            log::debug!("{}: {:?}", entry.name, e);
             None
         }
     }

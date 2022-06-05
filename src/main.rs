@@ -1,6 +1,7 @@
 use std::str::FromStr;
-use log::LevelFilter;
+use log::{LevelFilter};
 use simple_logger::SimpleLogger;
+use crate::model::RunMode;
 
 mod model;
 mod formatting;
@@ -10,36 +11,28 @@ mod telegram;
 mod tests;
 mod lambda;
 
-const STACK_SIZE: usize = 4 * 1024 * 1024;
-
 #[tokio::main]
 async fn main() {
     configure_logging();
-    telegram::run_polling().await.unwrap();
 
-    // running actual logic in different thread so stack size could be set
-    // otherwise frankenstein can fail with STACK_OVERFLOW on larger json responses
-    // std::thread::Builder::new()
-    //     .stack_size(STACK_SIZE)
-    //     .spawn(run)
-    //     .unwrap()
-    //     .join()
-    //     .unwrap();
-}
+    let run_mode = std::env::var("RUN_MODE")
+        .map_or_else(|_| {
+            log::warn!("RUN_MODE missing or invalid");
+            RunMode::WebHook
+        }, |run_mode| RunMode::from_str(&run_mode).unwrap());
 
-fn run() {
-    let runtime = tokio::runtime::Runtime::new().unwrap();
+    log::info!("Running in {:?} mode", run_mode);
 
-    let future =
-        // telegram::run_polling();
-        lambda::run();
-
-    runtime.block_on(future).unwrap();
+    match run_mode {
+        RunMode::Polling => telegram::run_polling().await.unwrap(),
+        RunMode::WebHook => lambda::run().await.unwrap(),
+    }
 }
 
 fn configure_logging() {
-    let log_level = LevelFilter::from_str(
-        &std::env::var("LOG_LEVEL").unwrap_or("Info".to_string())
-    ).unwrap_or(LevelFilter::Info);
+    let log_level = std::env::var("LOG_LEVEL").ok()
+        .and_then(|log_level| LevelFilter::from_str(&log_level).ok())
+        .unwrap_or(LevelFilter::Info);
+
     SimpleLogger::new().with_level(log_level).init().unwrap();
 }

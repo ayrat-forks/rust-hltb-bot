@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 #[derive(Debug)]
 pub struct GamePageData {
     pub steam: String
@@ -38,6 +40,26 @@ impl FullEntry {
         FullEntry {
             entry,
             page_data
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum RunMode {
+    Polling,
+    WebHook
+}
+#[derive(Debug)]
+pub struct EnumParseError(String);
+
+impl FromStr for RunMode {
+    type Err = EnumParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_ref() {
+            "polling" => Ok(RunMode::Polling),
+            "webhook" => Ok(RunMode::WebHook),
+            _ => Err(EnumParseError(format!("Unknown RunMode {}", s)))
         }
     }
 }

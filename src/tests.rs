@@ -12,7 +12,7 @@ mod tests {
         let page = fs::read_to_string("./page.html").unwrap();
 
         let entries = parse_entries_from_page(&page);
-        log::info!("found {} entries", entries.len());
+        println!("found {} entries", entries.len());
 
         let msg = format_msg_initial(&entries);
         log::info!("{}", msg);
